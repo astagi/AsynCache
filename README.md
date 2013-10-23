@@ -8,8 +8,8 @@ Note: all write/read operations are made outside of your app’s main UI thread 
 
 An example to write an entry in your cache:
 ```
-    AsynCache.getInstance().write(context, "hello", 
-        new String("hello!").getBytes(), new AsynCache.WriteResponseHandler() {
+    AsynCache.getInstance().write(context, "hello", "Hello!", 
+        new AsynCache.WriteResponseHandler() {
 
             @Override
             public void onSuccess() {
@@ -23,9 +23,12 @@ An example to write an entry in your cache:
             
         });
 ```
+Write accepts a String or an array of bytes.
+
 An example to read an entry in your cache:
 ```
-    AsynCache.getInstance().read(context, "hello", new AsynCache.ReadResponseHandler() {
+    AsynCache.getInstance().read(context, "hello", 
+        new AsynCache.ReadResponseHandler() {
 
             @Override
             public void onSuccess(byte[] data) {

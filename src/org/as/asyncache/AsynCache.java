@@ -34,6 +34,10 @@ public class AsynCache {
 		return instance;
 	}
 
+	public void write(Context context, String name, String data, WriteResponseHandler callback) {
+		write(context, name, data.getBytes(), callback);
+	}
+
 	public void write(Context context, String name, byte[] data, WriteResponseHandler callback) {
 
 		name = md5(name);

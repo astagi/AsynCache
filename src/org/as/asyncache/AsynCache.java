@@ -1,14 +1,14 @@
 package org.as.asyncache;
 
 import java.io.File;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import android.content.Context;
 
 public class AsynCache {
 
 	private static final long INITIAL_MAX_SIZE = 5242880L;
+	private static final String ASYNCACHE_FOLDER = "asyncache";
+
 	private static AsynCache instance;
 
 	private long maxSize = INITIAL_MAX_SIZE;
@@ -34,15 +34,17 @@ public class AsynCache {
 		return instance;
 	}
 
+	public void write(Context context, String category, String name, String data, WriteResponseHandler callback) {
+		write(context, Utils.pathJoin(category, name), data.getBytes(), callback);
+	}
+
 	public void write(Context context, String name, String data, WriteResponseHandler callback) {
 		write(context, name, data.getBytes(), callback);
 	}
 
 	public void write(Context context, String name, byte[] data, WriteResponseHandler callback) {
 
-		name = md5(name);
-
-		File cacheDir = context.getCacheDir();
+		File cacheDir = getDirectory(context);
 		long size = getDirSize(cacheDir);
 		long newSize = data.length + size;
 
@@ -50,16 +52,18 @@ public class AsynCache {
 			cleanDir(cacheDir, newSize - getMaxSize());
 		}
 
-		File file = new File(cacheDir, name);
+		File file = new File(Utils.pathJoin(cacheDir.toString(), name));
 		new CacheWriterTask(file, data, callback).execute();
+	}
+
+	public void read(Context context, String category, String name, ReadResponseHandler callback) {
+		read(context, Utils.pathJoin(category, name), callback);
 	}
 
 	public void read(Context context, String name, ReadResponseHandler callback) {
 
-		name = md5(name);
-
-		File cacheDir = context.getCacheDir();
-		File file = new File(cacheDir, name);
+		File cacheDir = getDirectory(context);
+		File file = new File(Utils.pathJoin(cacheDir.toString(), name));
 
 		if (!file.exists()) {
 			callback.onFailure(new Exception("File not found"));
@@ -75,6 +79,10 @@ public class AsynCache {
 
 	public void setMaxSize(long maxSize) {
 		this.maxSize = maxSize;
+	}
+
+	private File getDirectory(Context context) {
+		return new File(Utils.pathJoin(context.getCacheDir().toString(), ASYNCACHE_FOLDER));
 	}
 
 	private void cleanDir(File dir, long bytes) {
@@ -97,6 +105,9 @@ public class AsynCache {
 		long size = 0;
 		File[] files = dir.listFiles();
 
+		if (files == null)
+			return 0;
+
 		for (File file : files) {
 			if (file.isFile()) {
 				size += file.length();
@@ -106,25 +117,21 @@ public class AsynCache {
 		return size;
 	}
 
-	private static String md5(final String s) {
-		try {
-			MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
-			digest.update(s.getBytes());
-			byte messageDigest[] = digest.digest();
+	public static class Utils {
 
-			StringBuffer hexString = new StringBuffer();
-			for (int i = 0; i < messageDigest.length; i++) {
-				String h = Integer.toHexString(0xFF & messageDigest[i]);
-				while (h.length() < 2)
-					h = "0" + h;
-				hexString.append(h);
+		public static String pathJoin(String... paths) {
+			String finalPath = "";
+			for (String path : paths) {
+				finalPath = joinTwoPaths(finalPath, path);
 			}
-			return hexString.toString();
-
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
+			return finalPath;
 		}
-		return "";
+
+		private static String joinTwoPaths(String path1, String path2) {
+			File file1 = new File(path1);
+			File file2 = new File(file1, path2);
+			return file2.getPath();
+		}
 	}
 
 }

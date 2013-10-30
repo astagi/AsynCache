@@ -23,6 +23,8 @@ class CacheWriterTask extends AsyncTask<Void, Void, Exception> {
 	@Override
 	protected Exception doInBackground(Void... arg0) {
 		try {
+			String path = file.getAbsolutePath();
+			new File(path.substring(0, path.lastIndexOf('/') + 1)).mkdirs();
 			setData(file, data);
 			return null;
 		} catch (IOException e) {

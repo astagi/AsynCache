@@ -33,6 +33,16 @@ public class AsynCache {
 			instance = new AsynCache();
 		return instance;
 	}
+	
+	public boolean exists(Context context, String category, String name) {
+		return exists(context, Utils.pathJoin(category, name));
+	}
+	
+	public boolean exists(Context context, String name) {
+		File cacheDir = getDirectory(context);
+		File file = new File(Utils.pathJoin(cacheDir.toString(), name));
+		return file.exists();
+	}
 
 	public void write(Context context, String category, String name, String data, WriteResponseHandler callback) {
 		write(context, Utils.pathJoin(category, name), data.getBytes(), callback);
